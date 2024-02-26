@@ -13,7 +13,7 @@ The app isn't perfect: For example, if you upload one file twice, the system mig
 
 - go to the backend drawer
 - create virtual environment: python -m venv .venv
-- activate the environment: .\venv\Scripts\activate (I trust the Linux people know how to activate it :) )
+- activate the environment: .venv\Scripts\activate (I trust the Linux people know how to activate it :) )
 - install the requirements: pip install -r requirements.txt
 - python main.py starts the backend server
 - PLEASE NOTICE, that you must have "music" drawer in the backend drawer in order the upload to work! (empty music drawer is included in GitHub repo by default)
