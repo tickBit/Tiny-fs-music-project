@@ -16,7 +16,7 @@ The app isn't perfect: For example, if you upload one file twice, the system mig
 - activate the environment: .venv\Scripts\activate (I trust the Linux people know how to activate it :) )
 - install the requirements: pip install -r requirements.txt
 - python main.py starts the backend server
-- PLEASE NOTICE, that you must CREATE "music" drawer in the backend drawer in order the upload to work!
+- PLEASE NOTICE, that you must CREATE "music" drawer into the backend drawer in order the upload to work!
 
 When the server on the backend is running, go to the fronend drawer. Install the Node modules:
 
