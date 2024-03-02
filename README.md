@@ -25,6 +25,10 @@ When the server on the backend is running, go to the fronend drawer. Install the
 
 When the app is running, you can upload music to the backend server and play it from the frontend.
 
+![Tiny-fs-music-project](https://github.com/tickBit/Tiny-fs-music-project/assets/61118857/0b6d32ef-2b2c-4b72-ae19-9f57634f90c1)
+
+All those musics in the picture are written by me...
+
 ## Bugs
 
 - if user presses delete at a tune, that is playing, the app doesn't work properly.. I'm trying to find time to fix this..
