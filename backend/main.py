@@ -1,16 +1,41 @@
 from flask import request, jsonify
 from config import app, db
-from models import Musics
+from models import Musics, Comments
 import vlc
 import os
 
 p = None
 
+@app.route("/add_comment/<string:new_comment>/<int:tune_id>", methods=["POST"])
+def add_comment(new_comment, tune_id):
+
+    comment = Comments(content=new_comment, post_id=tune_id)
+
+    try:
+        db.session.add(comment)
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"message": str(e)}), 400
+
+    return jsonify({"Comment added: ": "Ok"}), 201
+
+@app.route("/comments", methods=["GET"])
+def get_comments():
+    comments = Comments.query.all()
+    json_comments = list(map(lambda x: x.to_json(), comments))
+    return jsonify({"comments": json_comments})
+
 @app.route("/musics", methods=["GET"])
 def get_musics():
+    
     musics = Musics.query.all()
-    json_musics = list(map(lambda x: x.to_json(), musics))
-    return jsonify({"tunes": json_musics})
+    
+    # the following code is necessary to transform musics intro json string..
+    data = list(map(lambda x: x.to_json(), musics))
+    for d in data:
+        d["comments"] = []
+    
+    return jsonify({"tunes": data}), 200
 
 @app.route("/stop", methods=["GET"])
 def stop_music():
@@ -34,7 +59,7 @@ def play_music(tune_id):
     p = vlc.MediaPlayer(tune.file_path)
     p.play()
 
-    return jsonify({"message": "Playing: " + tune.tune_name})
+    return jsonify({"message": "Playing: " + tune.tune_name}), 200
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -56,14 +81,14 @@ def upload():
         db.session.add(new_tune)
         db.session.commit()
     except Exception as e:
-        return jsonify({"message": str(e)}), 400
+        return jsonify({"message": str(e)}), 500
 
     try:
         file.save(file_path)
         file.close()
     except Exception as e:
         db.session.rollback()
-        return jsonify({"Writing music to server failed:": str(e)}), 400
+        return jsonify({"Writing music to server failed:": str(e)}), 500
     
     return jsonify({"message": "New music added!"}), 201
 
@@ -75,16 +100,29 @@ def delete_music(tune_id):
     if not tune:
         return jsonify({"message": "Tune not found"}), 404
 
-    db.session.delete(tune)
-    db.session.commit()
+    # Delete comments related to the tune from database
+    comments = Comments.query.all()
+    for comment in comments:
+        if comment.post_id == tune_id:
+            cmnt = db.session.get(Comments, comment.id)
+            db.session.delete(cmnt)
+            db.session.commit()
+
+    # Delete tune from database
+    try:
+        db.session.delete(tune)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"Deleting from database failed: ": str(e)}), 500
 
     try:
         os.remove(tune.file_path)
     except Exception as e:
         db.session.rollback()
         return jsonify({"Deleting the music from the server failed:": str(e)}), 500
-    
-    return jsonify({"message": "Tune deleted!"}), 200
+
+    return jsonify({"message": "Tune and its comments deleted!"}), 200
 
 
 if __name__ == "__main__":

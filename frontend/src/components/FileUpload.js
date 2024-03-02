@@ -13,6 +13,8 @@ const UploadFiles = () => {
     const [files, setMusics] = useState([]);
     const [playing, setPlayState] = useState(false);
     const [tunePlaying, setTunePlaying] = useState(0);
+    const [comments, setComments] = useState([]);
+    const [commentsOn, setCommentsOn] = useState(0);
 
     const selectFile = (event) => {
       setSelectedFiles(event.target.files);
@@ -31,6 +33,7 @@ const UploadFiles = () => {
           setMessage(response.data.message);
         }).then(() => {
           updateFiles();
+          setComments([]);
         })
         .catch(() => {
           setProgress(0);
@@ -43,17 +46,27 @@ const UploadFiles = () => {
     };
   
     useEffect(() => {
-      fetchMusics()
+      fetchMusics();
+      fetchComments();
     }, []);
+
 
   const fetchMusics = async () => {
       const response = await fetch("http://127.0.0.1:5000/musics");
       const data = await response.json();
       setMusics(data.tunes);
+      
     };
+
+  const fetchComments = async () => {
+      const response = await fetch(`http://127.0.0.1:5000/comments`);
+      const data = await response.json();
+      setComments(data.comments);
+  };
 
   const updateFiles = () => {
       fetchMusics();
+      fetchComments();
     };
 
   // delete selected tune
@@ -67,6 +80,7 @@ const UploadFiles = () => {
           if (response.status === 200) {
               updateFiles();
 
+
           } else {
               console.error("Failed to delete")
           }
@@ -75,6 +89,24 @@ const UploadFiles = () => {
       }    
   }
 
+  // delete selected tune
+  const addComment = async (comment, tune_id) => {
+        
+    try {
+        const options = {
+            method: "POST"
+        }
+        const response = await fetch(`http://127.0.0.1:5000/add_comment/${comment}/${tune_id}`, options);
+        if (response.status === 201) {
+            console.log("New comment saved!");
+            fetchComments();
+        } else {
+            console.error("Failed to delete");
+        }
+    } catch (error) {
+        alert(error);
+    }    
+}
   // play selected tune
   const playTune = (tune_id) => {
     
@@ -106,7 +138,7 @@ const UploadFiles = () => {
       setTunePlaying(file_id);
 
     }
-    
+
     if (playing === true && tunePlaying !== file_id && event.target.textContent === "Play") {
       playTune(file_id);
       const btn = document.getElementById("btn"+tunePlaying);
@@ -129,8 +161,18 @@ const UploadFiles = () => {
     }
   }
 
+  const handleAddCmtButtonClick = (event, file_id) => {
+    let commentTxt = document.getElementById("txt"+file_id);
+    addComment(commentTxt.value, file_id);
+    commentTxt.value = "";
+  }
+
+  const handleCmtButtonClick = (file_id) => {
+  if (commentsOn !== file_id) setCommentsOn(file_id); else setCommentsOn(0);
+  }
+
   return (
-    <div>
+    <div className="main">
       {currentFile && (
         <div className="progress">
           <div
@@ -162,32 +204,55 @@ const UploadFiles = () => {
         {message}
       </div>
 
-      <div>
+  <div className="list">
             <h3>List of tunes</h3>
-    <Table striped bordered hover>
-      <thead>
+  <div>
+    <Table className="htable" bordered>
+    <thead>
         <tr>
-          <th>#</th>
-          <th>Tune</th>
-          <th>Delete</th>
-          <th>Play/Stop</th>
+          <th className="th1">#</th>
+          <th className="th2">Tune</th>
+          <th className="th3">Delete</th>
+          <th className="th4">Play/Stop</th>
+          <th className="th5">Comments</th>
         </tr>
       </thead>
-      <tbody>
-        {files.map((file, i) => (
-            <tr key={file.id}>
-            <td>{i+1}</td>
-            <td>{file.tuneName}</td>
-            <td><Button variant="primary" onClick={() => onDelete(file.id)}>Delete</Button></td>
-            <td><Button id={"btn"+(file.id).toString()} variant="primary" onClick={(event) => handleButtonClick(event, file.id)}>Play</Button></td>
-            </tr>
-             ))}
-      </tbody>
     </Table>
-    </div>
-
-    </div>
-  );
+      {files.map((file, i) => (
+        <div key={"tdiv"+i}>
+      <Table striped bordered hover>
+      <tbody>
+            <tr key={file.id}>
+            <td className="th1">{i+1}</td>
+            <td className="th2">{file.tuneName}</td>
+            <td className="th3"><Button variant="primary" onClick={() => onDelete(file.id)}>Delete</Button></td>
+            <td className="th4"><Button id={"btn"+(file.id).toString()} variant="primary" onClick={(event) => handleButtonClick(event, file.id)}>Play</Button></td>
+            <td className="th5"><Button id={"cmt"+(file.id).toString()} variant="primary" onClick={() => handleCmtButtonClick(file.id)}>Comments</Button></td>
+            </tr>
+      </tbody>
+      </Table>
+        {commentsOn === file.id ?
+          <div className="divComments">
+          <h4>Comments</h4>
+          {comments.map((comment, j) => (
+            <div key={"divp"+(j+1)}>
+              {comment.postId === file.id ?
+            <p>{comment.content}</p>
+                : null}
+            </div>
+          ))}
+          <textarea className="commentArea" id={"txt"+(file.id).toString()}></textarea>
+          <br/>
+          <Button className="commentButton" id={"btncmt"+(file.id).toString()} variant="primary" onClick={(event) => handleAddCmtButtonClick(event, file.id)}>Add comment</Button> 
+          
+          </div>
+          : null}
+          </div>
+          ))}
+          </div>
+          </div>
+          </div>
+  );    
 }
 
 export default UploadFiles;

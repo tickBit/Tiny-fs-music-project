@@ -7,7 +7,7 @@ CORS(app, origin="*")
 
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///musicdatabase.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["UPLOAD_FOLDER"] = "./music/"
 app.config["confirm_deleted_rows"] = False
 
