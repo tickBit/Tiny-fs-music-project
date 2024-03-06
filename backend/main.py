@@ -4,7 +4,10 @@ from models import Musics, Comments
 import vlc
 import os
 
-p = None
+playing = None
+
+instance = vlc.Instance()
+media_player = instance.media_list_player_new()
 
 @app.route("/add_comment/<string:new_comment>/<int:tune_id>", methods=["POST"])
 def add_comment(new_comment, tune_id):
@@ -39,25 +42,33 @@ def get_musics():
 
 @app.route("/stop", methods=["GET"])
 def stop_music():
-    global p
+    global media_player, playing
 
-    if p != None:
-        p.stop()
-        p = None
+    if playing != None:
+        media_player.stop()
+        playing = None
 
     return jsonify({"message": "Stopped playing."}), 200
 
 @app.route("/play/<int:tune_id>", methods=["GET"])
 def play_music(tune_id):
-    global p
+    global playing, instance, media_player
 
     tune = db.session.get(Musics, tune_id)
     
-    if p != None:
-        p.stop()
-        p = None
-    p = vlc.MediaPlayer(tune.file_path)
-    p.play()
+    if playing != None:
+        media_player.stop()
+        playing = None
+
+    file = tune.file_path
+    
+    media_list = instance.media_list_new([file])
+    media_player.set_media_list(media_list)
+    media_player.play()
+    
+    media_player.set_playback_mode(vlc.PlaybackMode.loop)
+
+    playing = tune_id
 
     return jsonify({"message": "Playing: " + tune.tune_name}), 200
 
@@ -94,6 +105,11 @@ def upload():
 
 @app.route("/delete_music/<int:tune_id>", methods=["DELETE"])
 def delete_music(tune_id):
+    global playing, media_player
+
+    if tune_id == playing:
+        media_player.stop()
+        playing = None
 
     tune = db.session.get(Musics, tune_id)
 
@@ -122,7 +138,10 @@ def delete_music(tune_id):
         db.session.rollback()
         return jsonify({"Deleting the music from the server failed:": str(e)}), 500
 
-    return jsonify({"message": "Tune and its comments deleted!"}), 200
+    if playing == None:
+        return jsonify({"message": "Tune and its comments deleted!"}), 201
+    else:
+        return jsonify({"message": "Tune and its comments deleted!"}), 200
 
 
 if __name__ == "__main__":

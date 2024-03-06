@@ -15,7 +15,7 @@ const UploadFiles = () => {
     const [tunePlaying, setTunePlaying] = useState(0);
     const [comments, setComments] = useState([]);
     const [commentsOn, setCommentsOn] = useState(0);
-
+    
     const selectFile = (event) => {
       setSelectedFiles(event.target.files);
     };
@@ -81,6 +81,10 @@ const UploadFiles = () => {
               updateFiles();
 
 
+          } else if (response.status === 201) {
+            updateFiles();
+            setMessage("");
+
           } else {
               console.error("Failed to delete")
           }
@@ -136,21 +140,23 @@ const UploadFiles = () => {
       event.target.textContent = "Stop";
       setPlayState(true);
       setTunePlaying(file_id);
-
+      return;
     }
 
-    if (playing === true && tunePlaying !== file_id && event.target.textContent === "Play") {
+    if (playing === true && tunePlaying !== file_id && tunePlaying !== 0 && event.target.textContent === "Play") {
       playTune(file_id);
-      const btn = document.getElementById("btn"+tunePlaying);
+      const btn = document.getElementById("btn"+file_id);
       btn.textContent = "Play";
       event.target.textContent = "Stop";
       setTunePlaying(file_id);
+      return;
     }
   
     if (playing === true && tunePlaying === file_id && event.target.textContent === "Play") {
       playTune(file_id);
       event.target.textContent = "Play";
       setTunePlaying(file_id);
+      return;
     }
 
     if (playing === true && tunePlaying === file_id && event.target.textContent === "Stop") {
@@ -158,6 +164,7 @@ const UploadFiles = () => {
       event.target.textContent = "Play";
       setPlayState(false);
       setTunePlaying(0);
+      return;
     }
   }
 
@@ -226,14 +233,15 @@ const UploadFiles = () => {
             <td className="th1">{i+1}</td>
             <td className="th2">{file.tuneName}</td>
             <td className="th3"><Button variant="primary" onClick={() => onDelete(file.id)}>Delete</Button></td>
-            <td className="th4"><Button id={"btn"+(file.id).toString()} variant="primary" onClick={(event) => handleButtonClick(event, file.id)}>Play</Button></td>
+            <td className="th4"><Button id={"btn"+(file.id).toString()} variant="primary" onClick={(event) => handleButtonClick(event, file.id)}>{file.id === tunePlaying ? "Stop" : "Play"}</Button></td>
             <td className="th5"><Button id={"cmt"+(file.id).toString()} variant="primary" onClick={() => handleCmtButtonClick(file.id)}>Comments</Button></td>
             </tr>
       </tbody>
       </Table>
         {commentsOn === file.id ?
           <div className="divComments">
-          <h4>Comments</h4>
+          <h4>Comments</h4>    let playText = "";
+
           {comments.map((comment, j) => (
             <div key={"divp"+(j+1)}>
               {comment.postId === file.id ?
