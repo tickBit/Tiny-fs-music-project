@@ -132,16 +132,16 @@ def delete_music(tune_id):
         db.session.rollback()
         return jsonify({"Deleting from database failed: ": str(e)}), 500
 
-    try:
-        os.remove(tune.file_path)
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"Deleting the music from the server failed:": str(e)}), 500
+    # check if file exists
+    if os.path.isfile(tune.file_path):
+        try:
+            os.remove(tune.file_path)
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"Deleting the music from the server failed:": str(e)}), 500
 
-    if playing == None:
-        return jsonify({"message": "Tune and its comments deleted!"}), 201
-    else:
-        return jsonify({"message": "Tune and its comments deleted!"}), 200
+    
+    return jsonify({"message": "Tune and its comments deleted!"}), 200
 
 
 if __name__ == "__main__":
