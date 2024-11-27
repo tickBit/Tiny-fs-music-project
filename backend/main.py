@@ -33,7 +33,7 @@ def get_musics():
     
     musics = Musics.query.all()
     
-    # the following code is necessary to transform musics intro json string..
+    # the following code is necessary to transform musics to json string..
     data = list(map(lambda x: x.to_json(), musics))
     for d in data:
         d["comments"] = []
