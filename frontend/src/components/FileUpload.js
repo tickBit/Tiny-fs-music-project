@@ -240,7 +240,7 @@ const UploadFiles = () => {
       </Table>
         {commentsOn === file.id ?
           <div className="divComments">
-          <h4>Comments</h4>    let playText = "";
+          <h4>Comments</h4>
 
           {comments.map((comment, j) => (
             <div key={"divp"+(j+1)}>
